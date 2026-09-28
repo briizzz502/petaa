@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO-EXPLORER: Media Pembelajaran Interaktif Peta - Kelas 12 SMA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        heading: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        geo: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            dark: '#0f172a',
+                            accent: '#0284c7'
+                        }
+                    },
+                    aspectRatio: {
+                        '16/9': '16 / 9',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles & Glassmorphism */
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b132b;
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        /* Make paragraph text bolder for better readability */
+        p, span, div, li, td, th {
+            font-weight: 600;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+        }
+
+        .glass-panel {
+            background-image: url('assets/gambarr.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: scroll !important;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.4) !important;
+            pointer-events: none;
+            border-radius: inherit;
+            z-index: 1;
+        }
+
+        .glass-panel > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .geo-gradient-text {
+            background: linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Override Tailwind background utilities for glass-panel */
+        .glass-panel[class*='bg-'] {
+            background-image: url('assets/gambarr.png') !important;
+        }
+
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .slide > .absolute {
+            z-index: 0 !important;
+        }
+
+        .slide > div:not(.absolute) {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 197, 94, 0.4);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(34, 197, 94, 0.8);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Certificate Print Styling */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            #certificate-node {
+                box-shadow: none !important;
+                border: 8px solid #15803d !important;
+                background: white !important;
+                color: #0f172a !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                padding: 2rem !important;
+                page-break-inside: avoid;
+            }
+            @page {
+                size: landscape;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between items-center bg-slate-950 text-slate-100 p-2 md:p-4 select-none">
+
+    <!-- Top Navigation & Progress Bar -->
+    <header id="app-header" class="w-full max-w-7xl glass-panel rounded-2xl p-3 mb-3 flex flex-wrap items-center justify-between shadow-2xl z-50 no-print">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-900 font-extrabold text-xl shadow-lg">
+                <img src="assets/logo.png" alt="Logo" class="w-full h-full rounded-xl object-cover">
+            </div>
+            <div>
+                <h1 class="font-heading text-lg font-bold leading-none tracking-wide text-white">GEO-SPATIAL <span class="text-emerald-400">QUEST</span></h1>
+                <p class="text-xs text-slate-400 font-medium">Geografi SMA Kelas 12 • Pembelajaran Interaktif Peta</p>
+            </div>
+        </div>
+
+        <!-- Slide Indicators -->
+        <div class="hidden lg:flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800">
+            <div id="step-btn-1" onclick="goToSlide(1)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 flex items-center gap-1.5 transition">
+                <span>1</span> Sampul
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-2" onclick="goToSlide(2)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>2</span> Identitas
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-3" onclick="goToSlide(3)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>3</span> Tujuan
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-4" onclick="goToSlide(4)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>4</span> Materi
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-5" onclick="goToSlide(5)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>5</span> Gim Edukasi
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-6" onclick="goToSlide(6)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>6</span> Sertifikat
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+            <div id="step-btn-7" onclick="goToSlide(7)" class="step-badge cursor-pointer px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 flex items-center gap-1.5 transition">
+                <span>7</span> Biodata
+            </div>
+        </div>
+
+        <!-- Controls (Sound & Fullscreen) -->
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleAudio()" id="audio-btn" title="Efek Suara" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 flex items-center justify-center transition border border-slate-700">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <button onclick="toggleFullScreen()" title="Layar Penuh" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 flex items-center justify-center transition border border-slate-700">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN LANDSCAPE DISPLAY CONTAINER (Aspect Ratio 16:9 optimized) -->
+    <main class="w-full max-w-7xl flex-1 flex flex-col justify-center items-center relative overflow-hidden my-auto">
+        
+        <!-- SLIDE 1: JUDUL & IDENTITAS MATA PELAJARAN -->
+        <section id="slide-1" class="slide active w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-6 lg:p-10 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <!-- Background Map Overlay Effect -->
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#22c55e_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+
+            <div class="relative z-10 pointer-events-none">
+                <div class="absolute top-0 right-0 flex items-center gap-3">
+                    <img src="assets/pakdion.jpeg" alt="Pak Dion" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-emerald-400 shadow-lg shadow-emerald-500/20">
+                    <img src="assets/nurul.jpeg" alt="Nurul" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-cyan-400 shadow-lg shadow-cyan-500/20" style="object-position: center 40%;">
+                </div>
+            </div>
+            
+            <div class="my-auto z-10 max-w-3xl">
+                <img src="assets/judul.png" alt="Judul Materi" class="max-w-lg lg:max-w-2xl mb-4 object-contain float-animation" style="mix-blend-mode: multiply;">
+                <p class="text-slate-100 text-base sm:text-lg lg:text-xl mb-8 leading-relaxed max-w-2xl font-semibold">
+                    Jelajahi keajaiban ilmu kartografi interaktif! Pahami konsep dasar peta, jenis-jenis skala, fungsi spasial, hingga tantangan simulator spasial secara menyenangkan.
+                </p>
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <button onclick="goToSlide(2)" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-base lg:text-lg shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-105 flex items-center gap-3">
+                        <span>Mulai Petualangan</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button onclick="goToSlide(3)" class="px-6 py-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-bold text-sm lg:text-base border border-slate-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-emerald-400"></i>
+                        <span>Lihat Tujuan Pembelajaran</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subject Details Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-slate-800/80 text-xs text-slate-400 z-10">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-emerald-400 text-base"></i>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-semibold">Mata Pelajaran</p>
+                        <p class="font-bold text-slate-200">Geografi SMA</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-cyan-400 text-base"></i>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-semibold">Materi Utama</p>
+                        <p class="font-bold text-slate-200">Pengetahuan Peta</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-purple-400 text-base"></i>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-semibold">Mode Pembelajaran</p>
+                        <p class="font-bold text-slate-200">Gim Interaktif 6-Slide</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-certificate text-amber-400 text-base"></i>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-semibold">Output Belajar</p>
+                        <p class="font-bold text-slate-200">Sertifikat Nilai PDF</p>
+                    </div>
+                </div>
+            </div>
+            <audio id="audio-slide-1" loop style="display:none;">
+                <source src="assets/sound2.mp3" type="audio/mpeg">
+            </audio>
+        </section>
+
+
+        <!-- SLIDE 2: INPUT IDENTITAS MURID -->
+        <section id="slide-2" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-6 lg:p-10 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase">Langkah 1 dari 6</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Registrasi Penjelajah Spasial</h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400">Identitas Murid</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto items-center">
+                <!-- Avatar Picker -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center p-6 bg-slate-900/60 rounded-2xl border border-slate-800">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Pilih Avatar Penjelajah</p>
+                    <div id="avatar-display" class="w-28 h-36 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 p-1 mb-4 shadow-xl shadow-emerald-500/10">
+                        <img id="current-avatar-img" src="assets/avatar1.jpeg" alt="Avatar 1" class="w-full h-full rounded-lg bg-slate-950 p-2 object-contain">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeAvatar('assets/avatar1.jpeg')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">Borin (Earth Mapper)</button>
+                        <button onclick="changeAvatar('assets/avatar2.jpeg')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">Elara (Star Cartographer)</button>
+                        <button onclick="changeAvatar('assets/avatar3.jpeg')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">Lyra (Pathfinder)</button>
+                    </div>
+                </div>
+
+                <!-- Form Inputs -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Nama Lengkap Murid <span class="text-emerald-400">*</span></label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="input-nama" placeholder="Masukkan nama lengkap kamu..." class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Kelas <span class="text-emerald-400">*</span></label>
+                            <div class="relative">
+                                <i class="fa-solid fa-school absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" id="input-kelas" placeholder="Contoh: 12 IPS 1" class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Asal Sekolah <span class="text-emerald-400">*</span></label>
+                            <div class="relative">
+                                <i class="fa-solid fa-building-columns absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" id="input-sekolah" placeholder="Contoh: SMAN 1 Padang" class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="form-error" class="hidden text-rose-400 text-xs font-medium flex items-center gap-1.5 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Mohon lengkapi Nama dan Asal Sekolah kamu sebelum melanjutkan.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+                <button onclick="goToSlide(1)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+                <button onclick="saveStudentIdentity()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                    <span>Simpan & Lanjutkan</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            <audio id="audio-slide-2" loop style="display:none;">
+                <source src="assets/sound2.mp3" type="audio/mpeg">
+            </audio>
+        </section>
+
+
+        <!-- SLIDE 3: TUJUAN PEMBELAJARAN & GAMBARAN UMUM MATERI -->
+        <section id="slide-3" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-6 lg:p-10 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase">Langkah 2 dari 6</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Tujuan Pembelajaran & Peta Konsep</h2>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <span class="text-xs text-slate-400">Target Capaian Pembelajaran</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                <!-- Card 1 -->
+                <div class="glass-card p-5 rounded-2xl border-l-4 border-l-emerald-500 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg mb-3">
+                            <i class="fa-solid fa-map-marked-alt"></i>
+                        </div>
+                        <h3 class="font-bold text-base text-white mb-2">1. Mengidentifikasi Unsur Peta</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Peserta didik mampu memahami komponen kelengkapan peta seperti Judul, Skala, Legenda, Inset, Garis Astronomis, Tata Warna, dan Proyeksi Peta secara cermat.
+                        </p>
+                    </div>
+                    <span class="inline-block mt-4 text-[11px] text-emerald-400 font-semibold">Capaian: Pengetahuan Dasar</span>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-card p-5 rounded-2xl border-l-4 border-l-cyan-500 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg mb-3">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <h3 class="font-bold text-base text-white mb-2">2. Klasifikasi Jenis Peta</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Peserta didik dapat mengklasifikasikan peta berdasarkan isi (Umum & Tematik), rentang Skala (Kadaster hingga Geografis), Bentuk, Sifat Data, dan Statistik.
+                        </p>
+                    </div>
+                    <span class="inline-block mt-4 text-[11px] text-cyan-400 font-semibold">Capaian: Analisis Klasifikasi</span>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card p-5 rounded-2xl border-l-4 border-l-purple-500 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg mb-3">
+                            <i class="fa-solid fa-chart-area"></i>
+                        </div>
+                        <h3 class="font-bold text-base text-white mb-2">3. Aplikasi & Penggunaan</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Peserta didik mampu menganalisis pemanfaatan peta dalam perencanaan wilayah, transportasi, mitigasi bencana, serta menghitung skala peta.
+                        </p>
+                    </div>
+                    <span class="inline-block mt-4 text-[11px] text-purple-400 font-semibold">Capaian: Penerapan Praktis</span>
+                </div>
+            </div>
+
+            <!-- Concept Map Overview Bar -->
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-emerald-400"></i> Alur Belajar Modul Interaktif:
+                </p>
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700">1. Unsur & Komponen Peta</span>
+                    <i class="fa-solid fa-arrow-right text-slate-600 text-xs"></i>
+                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700">2. Peta Umum vs Tematik</span>
+                    <i class="fa-solid fa-arrow-right text-slate-600 text-xs"></i>
+                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700">3. Skala & Bentuk Peta</span>
+                    <i class="fa-solid fa-arrow-right text-slate-600 text-xs"></i>
+                    <span class="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700">4. Calculator Simulator</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button onclick="goToSlide(2)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+                <button onclick="goToSlide(4)" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                    <span>Eksplorasi Materi Interaktif</span>
+                    <i class="fa-solid fa-book-open"></i>
+                </button>
+            </div>
+            <audio id="audio-slide-3" loop style="display:none;">
+                <source src="assets/sound2.mp3" type="audio/mpeg">
+            </audio>
+        </section>
+
+
+        <!-- SLIDE 4: URAIAN MATERI INTERAKTIF & SIMULATOR -->
+        <section id="slide-4" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-5 lg:p-8 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <!-- Header Tabs for Material Sub-Topics -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                    <span class="px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold uppercase">Langkah 3 dari 6 • Modul Interaktif</span>
+                    <h2 class="text-xl font-bold font-heading text-white">Materi Peta berdasarkan Sumber Ruangguru</h2>
+                </div>
+
+                <div class="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                    <button onclick="switchMaterialTab(1)" id="mat-tab-1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition">
+                        Unsur Peta
+                    </button>
+                    <button onclick="switchMaterialTab(2)" id="mat-tab-2" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
+                        Jenis Peta (Isi & Skala)
+                    </button>
+                    <button onclick="switchMaterialTab(3)" id="mat-tab-3" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
+                        Bentuk & Sifat Objek
+                    </button>
+                    <button onclick="switchMaterialTab(4)" id="mat-tab-4" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
+                        Simulator Skala
+                    </button>
+                </div>
+            </div>
+
+            <!-- Material Content Panels -->
+            <div class="my-auto py-2 overflow-y-auto max-h-[360px] pr-2">
+                <!-- TAB 1: UNSUR PETA -->
+                <div id="material-content-1" class="space-y-4">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Peta adalah gambaran permukaan bumi pada bidang datar yang diperkecil dengan skala tertentu. Klik komponen di bawah ini untuk melihat penjelasannya:
+                    </p>
+                    
+                    <div class="flex justify-center mb-3">
+                        <img src="assets/unsur.jpg" alt="Unsur Peta" class="w-full max-w-4xl h-auto rounded-xl border border-slate-700 shadow-lg" style="object-fit: contain;">
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div onclick="showElementDetail('Judul Peta', 'Menunjukkan isi dan wilayah yang digambarkan dalam peta. Ditulis dengan huruf kapital yang jelas.')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-heading text-emerald-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Judul Peta</h4>
+                            <p class="text-[10px] text-slate-400">Identitas wilayah</p>
+                        </div>
+                        <div onclick="showElementDetail('Skala Peta', 'Perbandingan jarak pada peta dengan jarak sebenarnya di lapangan (misal: 1 : 50.000).')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-ruler-combined text-cyan-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Skala Peta</h4>
+                            <p class="text-[10px] text-slate-400">Rasio jarak</p>
+                        </div>
+                        <div onclick="showElementDetail('Orientasi / Arah', 'Petunjuk arah mata angin, umumnya mengarah ke utara (ditandai tanda panah).')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-compass text-amber-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Orientasi Arah</h4>
+                            <p class="text-[10px] text-slate-400">Arah utara</p>
+                        </div>
+                        <div onclick="showElementDetail('Legenda & Simbol', 'Keterangan simbol-simbol (titik, garis, area, warna) pada peta agar mudah dibaca.')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-list text-purple-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Legenda & Simbol</h4>
+                            <p class="text-[10px] text-slate-400">Arti simbol</p>
+                        </div>
+                        <div onclick="showElementDetail('Inset Peta', 'Peta kecil tambahan untuk memperjelas posisi wilayah yang dipetakan terhadap area sekitarnya.')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-expand text-rose-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Inset Peta</h4>
+                            <p class="text-[10px] text-slate-400">Peta penjelas lokasi</p>
+                        </div>
+                        <div onclick="showElementDetail('Garis Astronomis', 'Garis lintang dan garis bujur untuk menentukan posisi absolut lokasi pada bumi.')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-border-all text-teal-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Garis Astronomis</h4>
+                            <p class="text-[10px] text-slate-400">Lintang & Bujur</p>
+                        </div>
+                        <div onclick="showElementDetail('Tata Warna', 'Simbol warna khusus: Biru (perairan), Cokelat (pegunungan), Hijau (dataran rendah).')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-palette text-yellow-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Tata Warna</h4>
+                            <p class="text-[10px] text-slate-400">Simbol Ketinggian</p>
+                        </div>
+                        <div onclick="showElementDetail('Proyeksi Peta', 'Teknik memindahkan bentuk globe (3D) ke bidang datar (2D) seperti Silinder, Kerucut, Azimuthal.')" class="glass-card p-3 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500/50">
+                            <i class="fa-solid fa-globe text-indigo-400 text-lg mb-1"></i>
+                            <h4 class="font-bold text-xs text-white">Proyeksi Peta</h4>
+                            <p class="text-[10px] text-slate-400">3D ke 2D</p>
+                        </div>
+                    </div>
+
+                    <div id="element-detail-box" class="bg-emerald-950/40 border border-emerald-500/30 p-3 rounded-xl text-xs text-emerald-200">
+                        <span class="font-bold text-white"><i class="fa-solid fa-circle-info mr-1"></i> Klik salah satu kotak unsur peta di atas untuk melihat detail lengkapnya.</span>
+                    </div>
+                </div>
+
+                <!-- TAB 2: JENIS PETA (ISI & SKALA) -->
+                <div id="material-content-2" class="hidden space-y-4">
+                    <div class="flex justify-center mb-4">
+                        <img src="assets/jenis.jpg" alt="Jenis Peta" class="w-full max-w-4xl rounded-xl border border-slate-700 shadow-lg" style="object-fit: contain;">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Jenis Berdasarkan Isi -->
+                        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                            <h3 class="font-bold text-sm text-emerald-400 mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-map"></i> A. Jenis Peta Berdasarkan Isi
+                            </h3>
+                            <ul class="space-y-2 text-xs text-slate-300">
+                                <li class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <strong class="text-white">1. Peta Umum:</strong> Menggambarkan fenomena permukaan bumi secara menyeluruh.
+                                    <ul class="mt-1 list-disc list-inside text-[11px] text-slate-400 space-y-0.5">
+                                        <li><b class="text-slate-300">Peta Topografi:</b> Menampilkan relief & garis kontur (ketinggian).</li>
+                                        <li><b class="text-slate-300">Peta Korografi:</b> Gambaran wilayah luas umum (contoh: Atlas).</li>
+                                        <li><b class="text-slate-300">Peta Geografi/Dunia:</b> Skala sangat kecil (Globe/Peta Dunia).</li>
+                                    </ul>
+                                </li>
+                                <li class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <strong class="text-white">2. Peta Khusus (Tematik):</strong> Menampilkan tema fenomena spesifik.
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Contoh: Peta Kepadatan Penduduk, Peta Curah Hujan, Peta Geologi, Peta Persebaran Flora-Fauna.</p>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Jenis Berdasarkan Skala -->
+                        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                            <h3 class="font-bold text-sm text-cyan-400 mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-ruler"></i> B. Jenis Peta Berdasarkan Skala
+                            </h3>
+                            <div class="space-y-1.5 text-xs">
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <span class="font-semibold text-slate-200">Peta Kadaster / Teknik</span>
+                                    <span class="text-emerald-400 font-mono">1 : 100 - 1 : 5.000</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <span class="font-semibold text-slate-200">Peta Skala Besar</span>
+                                    <span class="text-emerald-400 font-mono">1 : 5.000 - 1 : 250.000</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <span class="font-semibold text-slate-200">Peta Skala Sedang</span>
+                                    <span class="text-emerald-400 font-mono">1 : 250.000 - 1 : 500.000</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <span class="font-semibold text-slate-200">Peta Skala Kecil</span>
+                                    <span class="text-emerald-400 font-mono">1 : 500.000 - 1 : 1.000.000</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                    <span class="font-semibold text-slate-200">Peta Skala Geografis</span>
+                                    <span class="text-emerald-400 font-mono">&lt; 1 : 1.000.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: BENTUK, SIFAT OBJEK & STATISTIK -->
+                <div id="material-content-3" class="hidden space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                            <h4 class="font-bold text-xs text-amber-400 mb-2 uppercase tracking-wide">1. Berdasarkan Bentuk</h4>
+                            <ul class="text-xs text-slate-300 space-y-1.5">
+                                <li><b>Peta Datar (Planimetri):</b> 2D di media kertas/layar.</li>
+                                <li><b>Peta Timbul (Stereometri):</b> 3D menggambarkan relief nyata.</li>
+                                <li><b>Peta Digital:</b> Disimpan dalam komputer/GIS/Web.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                            <h4 class="font-bold text-xs text-purple-400 mb-2 uppercase tracking-wide">2. Berdasarkan Sifat Objek</h4>
+                            <ul class="text-xs text-slate-300 space-y-1.5">
+                                <li><b>Peta Stasioner:</b> Menggambarkan keadaan yang relatif stabil/tetap (Contoh: Peta Jalur Pegunungan, Kedalaman Laut).</li>
+                                <li><b>Peta Dinamik:</b> Menggambarkan fenomena yang selalu berubah (Contoh: Peta Persebaran Penduduk, Peta Aliran Transportasi).</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                            <h4 class="font-bold text-xs text-teal-400 mb-2 uppercase tracking-wide">3. Berdasarkan Statistik</h4>
+                            <ul class="text-xs text-slate-300 space-y-1.5">
+                                <li><b>Statistik Kualitatif:</b> Menampilkan jenis data tanpa jumlah/angka (Contoh: Peta Persebaran Jenis Tanah).</li>
+                                <li><b>Statistik Kuantitatif:</b> Menampilkan jumlah/persentase data (Contoh: Peta Tingkat Curah Hujan).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <img src="assets/materi3.jpg" alt="Bentuk Sifat Objek" class="w-full max-w-4xl rounded-xl border border-slate-700 shadow-lg" style="object-fit: contain;">
+                    </div>
+                </div>
+                <div id="material-content-4" class="hidden space-y-4">
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                        <h3 class="font-bold text-sm text-emerald-400 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-calculator"></i> Interactive Scale Calculator (Rumus Skala)
+                        </h3>
+                        <p class="text-xs text-slate-300 mb-3">
+                            Rumus Skala: <span class="text-emerald-400 font-mono font-bold">Skala (S) = Jarak Peta (JP) / Jarak Sebenarnya (JS)</span>
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 uppercase">Jarak di Peta (JP)</label>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <input type="number" id="sim-jp" value="5" oninput="calculateScaleSim()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-mono text-emerald-400 font-bold focus:outline-none">
+                                    <span class="text-xs text-slate-400">cm</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 uppercase">Jarak Sebenarnya (JS)</label>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <input type="number" id="sim-js" value="10" oninput="calculateScaleSim()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-mono text-cyan-400 font-bold focus:outline-none">
+                                    <span class="text-xs text-slate-400">km</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 uppercase">Hasil Skala Peta (1 : N)</label>
+                                <div class="mt-1 bg-slate-950 border border-emerald-500/50 rounded-lg p-2 text-xs font-mono text-emerald-400 font-extrabold flex items-center justify-between">
+                                    <span id="sim-result">1 : 200.000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="sim-category" class="mt-3 text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-300">
+                            Klasifikasi Peta: <b class="text-cyan-400">Peta Skala Besar</b> (Digunakan untuk peta wilayah Kabupaten/Kecamatan).
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="assets/materi4.jpg" alt="Simulator Skala" class="w-full max-w-4xl rounded-xl border border-slate-700 shadow-lg" style="object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button onclick="goToSlide(3)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+                <button onclick="goToSlide(5)" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                    <span>Lanjut ke Gim Edukasi</span>
+                    <i class="fa-solid fa-gamepad"></i>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- SLIDE 5: GIM EDUKASI INTERAKTIF (3-IN-1: PILIHAN GANDA, MENJODOHKAN, MENGKATEGORIKAN) -->
+        <section id="slide-5" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-5 lg:p-8 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <!-- Game Header -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase">Langkah 4 dari 6</span>
+                        <h2 class="text-xl font-bold font-heading text-white">Gim Edukasi Interaktif Peta</h2>
+                    </div>
+                </div>
+
+                <!-- Live Score Dashboard -->
+                <div class="flex items-center space-x-3 bg-slate-900 px-4 py-1.5 rounded-xl border border-slate-800">
+                    <div class="text-center">
+                        <p class="text-[10px] text-slate-400 uppercase font-semibold">Skor Total</p>
+                        <p id="game-total-score" class="text-lg font-extrabold font-mono text-emerald-400">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub Game Navigation Tabs -->
+            <div class="flex items-center space-x-2 my-2">
+                <button onclick="switchGameMode(1)" id="game-tab-1" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check"></i> 1. Pilihan Ganda
+                </button>
+                <button onclick="switchGameMode(2)" id="game-tab-2" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-link"></i> 2. Menjodohkan
+                </button>
+                <button onclick="switchGameMode(3)" id="game-tab-3" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-boxes-stacked"></i> 3. Mengkategorikan
+                </button>
+            </div>
+
+            <!-- GAME CONTAINER BOX -->
+            <div class="my-auto overflow-y-auto max-h-[350px] pr-1">
+                <!-- GAME MODE 1: PILIHAN GANDA -->
+                <div id="game-mode-1" class="space-y-4">
+                    <div id="quiz-container" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="quiz-progress-text" class="text-xs font-bold text-emerald-400">Soal 1 dari 4</span>
+                            <span class="text-[11px] text-slate-400">Bobot: 25 Poin</span>
+                        </div>
+                        <h3 id="quiz-question" class="text-sm sm:text-base font-bold text-white mb-4">Loading pertanyaan...</h3>
+
+                        <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <!-- Dynamic Options Generated Here -->
+                        </div>
+
+                        <div id="quiz-feedback" class="hidden mt-3 p-3 rounded-xl text-xs font-semibold flex items-center justify-between"></div>
+
+                        <!-- Navigation Buttons for Quiz -->
+                        <div class="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-slate-700">
+                            <button id="quiz-prev-btn" onclick="previousQuestion()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                                <i class="fa-solid fa-arrow-left"></i> Soal Sebelumnya
+                            </button>
+                            <span id="quiz-nav-text" class="text-xs text-slate-400">Menjawab soal untuk melanjut...</span>
+                            <button id="quiz-next-btn" onclick="nextQuestion()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                                Soal Berikutnya <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GAME MODE 2: MENJODOHKAN -->
+                <div id="game-mode-2" class="hidden space-y-3">
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        <p class="text-xs text-slate-300 mb-3">
+                            <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1"></i> Klik sebuah <b>Jenis/Skala Peta</b> di sebelah kiri, kemudian klik <b>Contoh/Penggunaan</b> yang sesuai di sebelah kanan!
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Left Items -->
+                            <div id="match-left-column" class="space-y-2"></div>
+                            <!-- Right Items -->
+                            <div id="match-right-column" class="space-y-2"></div>
+                        </div>
+                        <div id="match-feedback" class="mt-3 text-xs font-bold text-cyan-400"></div>
+                    </div>
+                </div>
+
+                <!-- GAME MODE 3: MENGKATEGORIKAN -->
+                <div id="game-mode-3" class="hidden space-y-3">
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        <p class="text-xs text-slate-300 mb-3">
+                            <i class="fa-solid fa-layer-group text-purple-400 mr-1"></i> Masukkan kartu objek peta berikut ke dalam kategori yang benar (<b>Peta Stasioner</b> vs <b>Peta Dinamik</b>):
+                        </p>
+
+                        <!-- Card to Categorize -->
+                        <div id="category-card-box" class="bg-slate-950 p-4 rounded-xl border border-purple-500/30 text-center mb-4">
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Objek Peta Saat Ini:</p>
+                            <h4 id="category-current-item" class="text-base font-extrabold text-white my-1">...</h4>
+                            <div class="flex justify-center gap-3 mt-3">
+                                <button onclick="sortCategoryItem('Stasioner')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">
+                                    <i class="fa-solid fa-anchor mr-1"></i> Peta Stasioner
+                                </button>
+                                <button onclick="sortCategoryItem('Dinamik')" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-bold text-white transition">
+                                    <i class="fa-solid fa-arrows-spin mr-1"></i> Peta Dinamik
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div id="category-progress-text" class="text-xs text-slate-400 text-center">
+                            Progres Katogorisasi: 0 / 4 Selesai
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Footer Controls -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button onclick="goToSlide(4)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali Ke Materi
+                </button>
+                <button onclick="finishGameAndGenerateCert()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition flex items-center gap-2">
+                    <span>Selesaikan Gim & Lihat Sertifikat</span>
+                    <i class="fa-solid fa-award"></i>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- SLIDE 6: SERTIFIKAT & REPORT NILAI (PRINTABLE PDF) -->
+        <section id="slide-6" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-4 lg:p-6 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <!-- Screen Controls -->
+            <div class="flex items-center justify-between no-print mb-2">
+                <div>
+                    <span class="px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold uppercase">Sertifikat Kelulusan Modul</span>
+                    <h2 class="text-xl font-bold font-heading text-white">Hasil Pembelajaran Interaktif</h2>
+                </div>
+                <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                </button>
+            </div>
+
+            <!-- CERTIFICATE EMBEDDED CONTAINER -->
+            <div id="certificate-node" class="w-full my-auto bg-slate-900 border-4 border-emerald-500/40 rounded-2xl p-6 lg:p-8 relative overflow-hidden shadow-2xl">
+                <!-- Certificate Decorative Watermark -->
+                <div class="absolute -right-10 -bottom-10 opacity-5 text-emerald-400 text-9xl pointer-events-none">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+
+                <div class="text-center space-y-3 relative z-10">
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-certificate text-emerald-400 text-2xl"></i>
+                        <span class="font-heading font-extrabold tracking-widest text-emerald-400 uppercase text-xs">Sertifikat Kompetensi Geografi</span>
+                    </div>
+
+                    <h2 class="text-2xl lg:text-3xl font-extrabold font-heading text-white uppercase tracking-tight">
+                        SERTIFIKAT KELULUSAN PEMBELAJARAN PETA
+                    </h2>
+                    <p class="text-xs text-slate-400">Diberikan secara resmi kepada penjelajah spasial terdaftar:</p>
+
+                    <div class="py-1">
+                        <h3 id="cert-student-name" class="text-2xl lg:text-3xl font-extrabold text-emerald-400 font-heading tracking-wide">
+                            [Nama Murid]
+                        </h3>
+                        <p id="cert-student-school" class="text-xs font-semibold text-slate-300 mt-1">
+                            Kelas: [Kelas] • [Asal Sekolah]
+                        </p>
+                    </div>
+
+                    <p class="text-xs text-slate-300 max-w-xl mx-auto leading-relaxed">
+                        Telah menyelesaikan seluruh rangkaian modul interaktif dan uji kompetensi gim edukasi mengenai <b class="text-emerald-400">Materi Peta, Jenis-Jenis Peta, Skala, dan Penggunaannya</b> Kurikulum Merdeka Geografi Kelas 12 SMA.
+                    </p>
+
+                    <!-- Score Grid -->
+                    <div class="grid grid-cols-3 gap-3 max-w-lg mx-auto py-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Skor Akhir</p>
+                            <p id="cert-final-score" class="text-xl font-extrabold font-mono text-emerald-400">0 / 100</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Predikat</p>
+                            <p id="cert-predicate" class="text-xs font-extrabold text-cyan-400 mt-1">Sangat Memuaskan</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Tanggal Selesai</p>
+                            <p id="cert-date" class="text-xs font-semibold text-slate-300 mt-1">12/09/2026</p>
+                        </div>
+                    </div>
+
+                    <!-- Signatures / Verification -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 max-w-xl mx-auto">
+                        <div class="text-left">
+                            <p class="font-bold text-slate-200">GEO-SPATIAL QUEST SYSTEM</p>
+                            <p class="text-[9px] text-slate-500">Media Interaktif Terverifikasi</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-emerald-400">Guru Mata Pelajaran Geografi</p>
+                            <p class="text-[9px] text-slate-500">Kelas 12 SMA / MA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800 no-print">
+                <button onclick="goToSlide(5)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Ulangi Gim
+                </button>
+                <button onclick="goToSlide(1)" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-house"></i> Kembali ke Sampul
+                </button>
+                <button onclick="goToSlide(7)" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-2">
+                    Lihat Biodata <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            <audio id="audio-slide-6" loop style="display:none;">
+                <source src="assets/sound2.mp3" type="audio/mpeg">
+            </audio>
+        </section>
+
+        <!-- SLIDE 7: BIODATA -->
+        <section id="slide-7" class="slide w-full h-full min-h-[520px] lg:aspect-16/9 glass-panel rounded-3xl p-6 lg:p-10 flex-col justify-between relative overflow-hidden border border-slate-800 shadow-2xl">
+            <div class="text-center">
+                <span class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase">Informasi Pembuat</span>
+                <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-2">Biodata</h2>
+            </div>
+
+            <div class="relative flex-1 min-h-0 flex items-center justify-center py-4 overflow-hidden">
+                <img src="assets/Biodata.png" alt="Biodata" class="w-full h-full object-contain rounded-xl shadow-2xl scale-125">
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button onclick="goToSlide(6)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Sertifikat
+                </button>
+                <button onclick="goToSlide(1)" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-house"></i> Kembali ke Sampul
+                </button>
+            </div>
+            <audio id="audio-slide-7" loop style="display:none;">
+                <source src="assets/sound2.mp3" type="audio/mpeg">
+            </audio>
+        </section>
+
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- APPLICATION STATE ---
+        let currentSlide = 1;
+        let audioEnabled = true;
+
+        let studentData = {
+            name: '',
+            class: '12 IPS 1',
+            school: '',
+            avatar: 'assets/avatar1.jpeg'
+        };
+
+        let scores = {
+            quiz: 0,
+            match: 0,
+            category: 0,
+            total: 0
+        };
+
+        // --- AUDIO SYNTHESIS HELPER (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                // For MP3 files
+                if (type === 'win') {
+                    const audio = new Audio('assets/win.mp3');
+                    audio.play().catch(e => console.log('Audio play error:', e));
+                    return;
+                } else if (type === 'wrong') {
+                    const audio = new Audio('assets/wrong.mp3');
+                    audio.play().catch(e => console.log('Audio play error:', e));
+                    return;
+                } else if (type === 'sound1') {
+                    const audio = new Audio('assets/sound1.mp3');
+                    audio.play().catch(e => console.log('Audio play error:', e));
+                    return;
+                }
+
+                // Original synthesized sounds
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'correct') {
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); // A5
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                }
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audio-btn');
+            btn.innerHTML = audioEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+            btn.classList.toggle('text-emerald-400', audioEnabled);
+            btn.classList.toggle('text-slate-500', !audioEnabled);
+            
+            // Handle background music for all slides with audio
+            for (let i = 1; i <= 7; i++) {
+                const audio = document.getElementById(`audio-slide-${i}`);
+                if (audio) {
+                    if (audioEnabled && currentSlide === i) {
+                        audio.play().catch(e => console.log('Audio play error:', e));
+                    } else {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                }
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(()=>{});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(()=>{});
+                }
+            }
+        }
+
+        // --- SLIDE NAVIGATION ---
+        function goToSlide(slideNumber) {
+            playSound('click');
+            // Hide all slides
+            for (let i = 1; i <= 7; i++) {
+                const s = document.getElementById(`slide-${i}`);
+                if (s) s.classList.remove('active');
+
+                const btn = document.getElementById(`step-btn-${i}`);
+                if (btn) {
+                    btn.classList.remove('bg-emerald-500', 'text-slate-950');
+                    btn.classList.add('bg-slate-800', 'text-slate-400');
+                }
+                
+                // Pause background music for slides 1 and 2
+                const audio = document.getElementById(`audio-slide-${i}`);
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }
+
+            // Show active slide
+            const target = document.getElementById(`slide-${slideNumber}`);
+            if (target) target.classList.add('active');
+
+            const activeBtn = document.getElementById(`step-btn-${slideNumber}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-slate-400');
+                activeBtn.classList.add('bg-emerald-500', 'text-slate-950');
+            }
+            
+            // Play background music for slides 1, 2, 3, 6, and 7 if audio is enabled
+            if ((slideNumber === 1 || slideNumber === 2 || slideNumber === 3 || slideNumber === 6 || slideNumber === 7) && audioEnabled) {
+                const audio = document.getElementById(`audio-slide-${slideNumber}`);
+                if (audio) {
+                    audio.play().catch(e => console.log('Audio play error:', e));
+                }
+            }
+
+            currentSlide = slideNumber;
+
+            // If entering Slide 6, update certificate fields
+            if (slideNumber === 6) {
+                updateCertificate();
+            }
+        }
+
+        // --- SLIDE 2: IDENTITAS MURID LOGIC ---
+        function changeAvatar(imagePath) {
+            playSound('click');
+            studentData.avatar = imagePath;
+            document.getElementById('current-avatar-img').src = imagePath;
+        }
+
+        function saveStudentIdentity() {
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value;
+            const sekolah = document.getElementById('input-sekolah').value.trim();
+            const errBox = document.getElementById('form-error');
+
+            if (!nama || !sekolah) {
+                playSound('wrong');
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            errBox.classList.add('hidden');
+            studentData.name = nama;
+            studentData.class = kelas;
+            studentData.school = sekolah;
+
+            playSound('correct');
+            goToSlide(3);
+        }
+
+        // --- SLIDE 4: MATERI INTERAKTIF LOGIC ---
+        function switchMaterialTab(tabNum) {
+            playSound('click');
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`mat-tab-${i}`);
+                const content = document.getElementById(`material-content-${i}`);
+                if (btn) {
+                    btn.classList.remove('bg-emerald-500', 'text-slate-950');
+                    btn.classList.add('text-slate-400');
+                }
+                if (content) content.classList.add('hidden');
+            }
+
+            const activeBtn = document.getElementById(`mat-tab-${tabNum}`);
+            const activeContent = document.getElementById(`material-content-${tabNum}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-emerald-500', 'text-slate-950');
+                activeBtn.classList.remove('text-slate-400');
+            }
+            if (activeContent) activeContent.classList.remove('hidden');
+        }
+
+        function showElementDetail(title, desc) {
+            playSound('click');
+            const box = document.getElementById('element-detail-box');
+            box.innerHTML = `<span class="font-extrabold text-emerald-400">${title}:</span> <span class="text-slate-200">${desc}</span>`;
+        }
+
+        function calculateScaleSim() {
+            const jp = parseFloat(document.getElementById('sim-jp').value) || 0;
+            const jsKm = parseFloat(document.getElementById('sim-js').value) || 0;
+            const resBox = document.getElementById('sim-result');
+            const catBox = document.getElementById('sim-category');
+
+            if (jp <= 0 || jsKm <= 0) {
+                resBox.innerText = 'Input Tidak Valid';
+                return;
+            }
+
+            const jsCm = jsKm * 100000;
+            const scaleDenominator = Math.round(jsCm / jp);
+
+            resBox.innerText = `1 : ${scaleDenominator.toLocaleString('id-ID')}`;
+
+            let catText = '';
+            if (scaleDenominator <= 5000) catText = 'Peta Kadaster / Teknik (Contoh: Sertifikat Tanah)';
+            else if (scaleDenominator <= 250000) catText = 'Peta Skala Besar (Contoh: Wilayah Kabupaten/Kecamatan)';
+            else if (scaleDenominator <= 500000) catText = 'Peta Skala Sedang (Contoh: Wilayah Provinsi)';
+            else if (scaleDenominator <= 1000000) catText = 'Peta Skala Kecil (Contoh: Wilayah Negara)';
+            else catText = 'Peta Skala Geografis (Contoh: Benua / Dunia)';
+
+            catBox.innerHTML = `Klasifikasi Peta: <b class="text-cyan-400">${catText}</b>`;
+        }
+
+
+        // --- SLIDE 5: GIM EDUKASI INTERAKTIF LOGIC ---
+        let currentQuizIndex = 0;
+        let maxQuestionReached = 0; // Track the highest question index reached
+        let answeredQuestions = {}; // Track which questions have been answered
+        const quizQuestions = [
+            {
+                q: "1. Peta yang menyajikan informasi relief permukaan bumi dengan garis kontur ketinggian disebut...",
+                options: ["Peta Topografi", "Peta Korografi", "Peta Tematik", "Peta Kadaster"],
+                ans: 0,
+                exp: "Peta Topografi menggunakan garis kontur untuk menunjukkan ketinggian dan relief permukaan bumi."
+            },
+            {
+                q: "2. Sertifikat pemilikan tanah memerlukan tingkat keakuratan sangat tinggi. Jenis peta yang digunakan adalah...",
+                options: ["Peta Skala Kecil", "Peta Kadaster", "Peta Geografis", "Peta Korografi"],
+                ans: 1,
+                exp: "Peta Kadaster memilki skala sangat besar (1 : 100 s/d 1 : 5.000) yang tepat untuk batas tanah."
+            },
+            {
+                q: "3. Manakah di bawah ini yang merupakan contoh Peta Tematik (Khusus)?",
+                options: ["Atlas Dunia", "Peta Kepadatan Penduduk", "Peta Rupa Bumi", "Globe"],
+                ans: 1,
+                exp: "Peta Tematik menyajikan fenomena spesifik seperti kepadatan penduduk, iklim, atau geologi."
+            },
+            {
+                q: "4. Peta yang menggambarkan fenomena permukaan bumi yang cenderung berubah secara berkala disebut...",
+                options: ["Peta Stasioner", "Peta Dinamik", "Peta Planimetri", "Peta Stereometri"],
+                ans: 1,
+                exp: "Peta Dinamik mencatat fenomena yang selalu mengalami perubahan seperti migrasi penduduk & aliran sungai."
+            }
+        ];
+
+        function switchGameMode(modeNum) {
+            playSound('click');
+            for (let i = 1; i <= 3; i++) {
+                const btn = document.getElementById(`game-tab-${i}`);
+                const modeBox = document.getElementById(`game-mode-${i}`);
+                if (btn) {
+                    btn.classList.remove('bg-amber-500', 'text-slate-950');
+                    btn.classList.add('text-slate-400');
+                }
+                if (modeBox) modeBox.classList.add('hidden');
+            }
+
+            const activeBtn = document.getElementById(`game-tab-${modeNum}`);
+            const activeBox = document.getElementById(`game-mode-${modeNum}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-amber-500', 'text-slate-950');
+                activeBtn.classList.remove('text-slate-400');
+            }
+            if (activeBox) activeBox.classList.remove('hidden');
+        }
+
+        function renderQuizQuestion() {
+            const item = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-progress-text').innerText = `Soal ${currentQuizIndex + 1} dari ${quizQuestions.length}`;
+            document.getElementById('quiz-question').innerText = item.q;
+
+            const optsBox = document.getElementById('quiz-options');
+            optsBox.innerHTML = '';
+
+            item.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-200 font-semibold transition flex items-center justify-between';
+                btn.innerHTML = `<span>${String.fromCharCode(65 + idx)}. ${opt}</span> <i class="fa-solid fa-circle-dot text-slate-600"></i>`;
+                btn.onclick = () => answerQuiz(idx);
+                optsBox.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').className = 'hidden';
+
+            // Update navigation buttons
+            updateQuizNavigation();
+        }
+
+        function updateQuizNavigation() {
+            const prevBtn = document.getElementById('quiz-prev-btn');
+            const nextBtn = document.getElementById('quiz-next-btn');
+            const isAnswered = answeredQuestions[currentQuizIndex] !== undefined;
+
+            // Disable previous button if on first question or haven't reached this question yet
+            if (currentQuizIndex === 0) {
+                prevBtn.disabled = true;
+            } else if (currentQuizIndex > maxQuestionReached) {
+                prevBtn.disabled = true;
+            } else {
+                prevBtn.disabled = false;
+            }
+
+            // Enable next button only if current question is answered
+            nextBtn.disabled = !isAnswered || currentQuizIndex >= quizQuestions.length - 1;
+        }
+
+        function previousQuestion() {
+            // Don't go before first question or beyond what was reached
+            if (currentQuizIndex > 0 && currentQuizIndex <= maxQuestionReached) {
+                currentQuizIndex--;
+                renderQuizQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            // Only go forward if current question is answered
+            if (answeredQuestions[currentQuizIndex] !== undefined && currentQuizIndex < quizQuestions.length - 1) {
+                currentQuizIndex++;
+                renderQuizQuestion();
+            }
+        }
+
+        function answerQuiz(selectedIdx) {
+            // Don't allow changing answer if already answered
+            if (answeredQuestions[currentQuizIndex] !== undefined) return;
+
+            const item = quizQuestions[currentQuizIndex];
+            const fb = document.getElementById('quiz-feedback');
+
+            if (selectedIdx === item.ans) {
+                playSound('win');
+                scores.quiz += 10;
+                fb.className = 'mt-3 p-3 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-between';
+                fb.innerHTML = `<span><i class="fa-solid fa-circle-check mr-1.5"></i> Benar! ${item.exp} (+10 Skor)</span>`;
+            } else {
+                playSound('wrong');
+                fb.className = 'mt-3 p-3 rounded-xl text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-between';
+                fb.innerHTML = `<span><i class="fa-solid fa-circle-xmark mr-1.5"></i> Kurang Tepat. Jawaban benar: ${item.options[item.ans]}.</span>`;
+            }
+
+            // Mark question as answered
+            answeredQuestions[currentQuizIndex] = selectedIdx;
+
+            // Update max question reached
+            if (currentQuizIndex > maxQuestionReached) {
+                maxQuestionReached = currentQuizIndex;
+            }
+
+            updateTotalScore();
+
+            // Update navigation buttons to enable next button
+            updateQuizNavigation();
+
+            // Disable all option buttons after answering
+            const optButtons = document.querySelectorAll('#quiz-options button');
+            optButtons.forEach(btn => btn.disabled = true);
+
+            if (currentQuizIndex < quizQuestions.length - 1) {
+                const answeredIndex = currentQuizIndex;
+                setTimeout(() => {
+                    if (currentQuizIndex === answeredIndex) nextQuestion();
+                }, 700);
+            }
+        }
+
+        // --- GAME MODE 2: MENJODOHKAN LOGIC ---
+        const matchPairs = [
+            { id: 1, title: 'Peta Topografi', target: 'Garis Kontur Ketinggian' },
+            { id: 2, title: 'Peta Kadaster', target: 'Sertifikat Hak Tanah' },
+            { id: 3, title: 'Peta Korografi', target: 'Buku Atlas Wilayah' },
+            { id: 4, title: 'Peta Tematik', target: 'Persebaran Curah Hujan' }
+        ];
+
+        let selectedLeftItem = null;
+        let matchedCount = 0;
+
+        function initMatchingGame() {
+            const leftCol = document.getElementById('match-left-column');
+            const rightCol = document.getElementById('match-right-column');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+
+            matchPairs.forEach(item => {
+                const lDiv = document.createElement('div');
+                lDiv.id = `match-left-${item.id}`;
+                lDiv.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-bold cursor-pointer hover:border-cyan-500 transition';
+                lDiv.innerText = item.title;
+                lDiv.onclick = () => selectLeftMatch(item.id);
+                leftCol.appendChild(lDiv);
+            });
+
+            // Shuffle right targets
+            const shuffled = [...matchPairs].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const rDiv = document.createElement('div');
+                rDiv.id = `match-right-${item.id}`;
+                rDiv.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 cursor-pointer hover:border-cyan-500 transition';
+                rDiv.innerText = item.target;
+                rDiv.onclick = () => selectRightMatch(item.id);
+                rightCol.appendChild(rDiv);
+            });
+        }
+
+        function selectLeftMatch(id) {
+            playSound('click');
+            selectedLeftItem = id;
+            matchPairs.forEach(item => {
+                const el = document.getElementById(`match-left-${item.id}`);
+                if (el) el.classList.remove('border-cyan-400', 'bg-cyan-950/40');
+            });
+
+            const sel = document.getElementById(`match-left-${id}`);
+            if (sel) sel.classList.add('border-cyan-400', 'bg-cyan-950/40');
+        }
+
+        function selectRightMatch(id) {
+            if (!selectedLeftItem) {
+                document.getElementById('match-feedback').innerText = "Pilih dulu item di sebelah kiri!";
+                return;
+            }
+
+            if (selectedLeftItem === id) {
+                playSound('win');
+                scores.match += 10;
+                matchedCount++;
+                document.getElementById(`match-left-${id}`).className = 'p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500 text-xs text-emerald-300 font-bold pointer-events-none';
+                document.getElementById(`match-right-${id}`).className = 'p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500 text-xs text-emerald-300 font-bold pointer-events-none';
+                document.getElementById('match-feedback').innerText = "Pasangan Tepat! (+10 Skor)";
+                selectedLeftItem = null;
+                updateTotalScore();
+            } else {
+                playSound('wrong');
+                document.getElementById('match-feedback').innerText = "Pasangan belum cocok, coba lagi!";
+            }
+        }
+
+        // --- GAME MODE 3: MENGKATEGORIKAN LOGIC ---
+        const categoryItems = [
+            { name: "Peta Jalur Pegunungan", category: "Stasioner" },
+            { name: "Peta Persebaran Penduduk", category: "Dinamik" },
+            { name: "Peta Kedalaman Laut (Batimetri)", category: "Stasioner" },
+            { name: "Peta Penggunaan Lahan Kota", category: "Dinamik" }
+        ];
+        let categoryIndex = 0;
+
+        function renderCategoryGame() {
+            if (categoryIndex < categoryItems.length) {
+                document.getElementById('category-current-item').innerText = categoryItems[categoryIndex].name;
+                document.getElementById('category-progress-text').innerText = `Progres Kategorisasi: ${categoryIndex} / ${categoryItems.length} Selesai`;
+            } else {
+                document.getElementById('category-card-box').innerHTML = `<p class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Semua Kategori Telah Selesai Ditentukan!</p>`;
+            }
+        }
+
+        function sortCategoryItem(userChoice) {
+            if (categoryIndex >= categoryItems.length) return;
+
+            const item = categoryItems[categoryIndex];
+            if (userChoice === item.category) {
+                playSound('correct');
+                scores.category += 10;
+            } else {
+                playSound('wrong');
+            }
+
+            categoryIndex++;
+            updateTotalScore();
+            renderCategoryGame();
+        }
+
+        function updateTotalScore() {
+            scores.total = scores.quiz + scores.match + scores.category;
+            // Max raw score = 40 (quiz) + 40 (match) + 20 (cat) = 100 max
+            const finalScaled = Math.min(100, Math.round((scores.total / 100) * 100));
+            document.getElementById('game-total-score').innerText = finalScaled;
+        }
+
+        function finishGameAndGenerateCert() {
+            playSound('correct');
+            goToSlide(6);
+        }
+
+        // --- SLIDE 6: CERTIFICATE GENERATION LOGIC ---
+        function updateCertificate() {
+            document.getElementById('cert-student-name').innerText = studentData.name || "Nama Siswa Teladan";
+            document.getElementById('cert-student-school').innerText = `Kelas: ${studentData.class || '12 IPS'} • ${studentData.school || 'SMA Negeri'}`;
+            
+            const rawScore = scores.total;
+            // Normalize score out of 100
+            const finalScore = Math.min(100, rawScore > 0 ? rawScore : 85); // Default encouraging score if skipped
+            
+            document.getElementById('cert-final-score').innerText = `${finalScore} / 100`;
+
+            let predicate = "Memuaskan";
+            if (finalScore >= 90) predicate = "Sangat Memuaskan (Cum Laude)";
+            else if (finalScore >= 75) predicate = "Memuaskan (Baik)";
+            else predicate = "Cukup Memenuhi";
+
+            document.getElementById('cert-predicate').innerText = predicate;
+
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('cert-date').innerText = dateStr;
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = function() {
+            renderQuizQuestion();
+            initMatchingGame();
+            renderCategoryGame();
+            calculateScaleSim();
+            
+            // Add sound1 to all non-game buttons
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('button');
+                if (target) {
+                    // Check if button is NOT inside slide-5 (game slide)
+                    const gameSlide = document.getElementById('slide-5');
+                    if (gameSlide && !gameSlide.contains(target)) {
+                        playSound('sound1');
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
